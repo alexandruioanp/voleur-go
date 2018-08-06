@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
@@ -24,7 +22,7 @@ const ( // iota is reset to 0
 	Remove
 )
 
-type VoleurUpdate struct {
+type VoleurUpdateType struct {
 	Name      string
 	Vol       int
 	IsSinkVol bool
@@ -61,14 +59,14 @@ func listen(change_event_out chan string) {
 	}
 }
 
-func pactl_get_sinkinput_details(sinkinput_num string) (VoleurUpdate, error) {
+func pactl_get_sinkinput_details(sinkinput_num string) (VoleurUpdateType, error) {
 	// TODO cache these?
 	cmd_out, err := exec.Command("pactl", "list", "sink-inputs").Output()
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 	}
 
-	out := VoleurUpdate{Name: "", Vol: 0, IsSinkVol: false}
+	out := VoleurUpdateType{Name: "", Vol: 0, IsSinkVol: false}
 
 	regex_app_name, err := regexp.Compile(`application.name = "(.*)"`)
 	if err != nil {
@@ -98,8 +96,8 @@ func pactl_get_sinkinput_details(sinkinput_num string) (VoleurUpdate, error) {
 	return out, nil
 }
 
-func parse_pactl_update_msg(str string) (VoleurUpdate, error) {
-	var out VoleurUpdate
+func parse_pactl_update_msg(str string) (VoleurUpdateType, error) {
+	var out VoleurUpdateType
 	//
 	if strings.Contains(str, "'change' on sink-input") {
 		r, err := regexp.Compile(`[\d]+`)
@@ -145,21 +143,34 @@ func main() {
 	dec_chan := make(chan []byte)
 	go decode(change_chan, dec_chan)
 
-	var m VoleurUpdate
+	web_req_ch := make(chan VoleurUpdateType)
+	
+	go web_listen(dec_chan, web_req_ch)
 
-	broker := NewSSEServer()
+	fmt.Println("main")
 
-	go func() {
-		for {
-			json_msg := <-dec_chan
-			err := json.Unmarshal(json_msg, &m)
-			if err == nil {
-				fmt.Println(m)
-			}
-			broker.Notifier <- json_msg
-//			fmt.Println("main function")
-		}
-	}()
+//	DEBUG POST events
+	for {
+		web_update := <- web_req_ch
+		fmt.Print("@main: ")
+		fmt.Println(web_update)
+//		err := json.Unmarshal(json_msg, &m)
+//		if err == nil {
+//			fmt.Println(m)
+//		}
+//		vol_update_ch <- json_msg
+	}
 
-	log.Fatal("HTTP server error: ", http.ListenAndServe("localhost:3000", broker))
+//	DEBUG sinkinfo volume events
+//	go web_listen(vol_update_ch, web_req_ch)
+//	var m VoleurUpdateType
+//	vol_update_ch := make(chan []byte)
+//	for {
+//		json_msg := <- dec_chan
+//		err := json.Unmarshal(json_msg, &m)
+//		if err == nil {
+//			fmt.Println(m)
+//		}
+//		vol_update_ch <- json_msg
+//	}
 }
