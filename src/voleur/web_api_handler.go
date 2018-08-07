@@ -5,14 +5,15 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"voleur/ifaces"
 )
 
 type APIHandler struct {
 	// POST data is processed and pushed to this channel
-	VolumeEventChannel chan VoleurUpdateType
+	VolumeEventChannel chan ifaces.VoleurUpdateType
 }
 
-func post_to_volupdate(data url.Values) (v VoleurUpdateType) {
+func post_to_volupdate(data url.Values) (v ifaces.VoleurUpdateType) {
 	name := data.Get("name")
 	vol, err := strconv.Atoi(data.Get("value"))
 	if err != nil {
@@ -27,18 +28,18 @@ func post_to_volupdate(data url.Values) (v VoleurUpdateType) {
 	v.Name = name
 	v.Vol = vol
 	v.IsSinkVol = isSinkVol
-	v.Type = Update
+	v.Type = ifaces.Update
 
 	return
 }
 
 func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("URL path: %s\n", r.URL.Path)
+	//	fmt.Printf("URL path: %s\n", r.URL.Path)
 
 	switch r.Method {
 
 	case "GET":
-		fmt.Println("GET")
+		fmt.Print("GET ")
 		fmt.Println(r.URL.Query())
 
 	case "POST":
@@ -58,7 +59,7 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
 // API factory
-func NewAPIHandler(event_channel chan VoleurUpdateType) (api_handler *APIHandler) {
+func NewAPIHandler(event_channel chan ifaces.VoleurUpdateType) (api_handler *APIHandler) {
 	// Instantiate a handler
 	api_handler = &APIHandler{
 		VolumeEventChannel: event_channel,

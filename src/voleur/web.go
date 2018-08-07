@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"voleur/ifaces"
 )
 
 var path_regexp = regexp.MustCompile(`^\/volOps.*`)
@@ -19,7 +20,7 @@ func myRouter(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func web_listen(events_in chan []byte, web_update_out chan VoleurUpdateType) {
+func web_listen(events_in chan []byte, web_update_out chan ifaces.VoleurUpdateType) {
 	broker := NewSSEServer(events_in)
 	api_handler = NewAPIHandler(web_update_out)
 	//	file_server = http.FileServer(http.Dir("./js")) //	different working dir
