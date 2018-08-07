@@ -144,33 +144,33 @@ func main() {
 	go decode(change_chan, dec_chan)
 
 	web_req_ch := make(chan VoleurUpdateType)
-	
+
 	go web_listen(dec_chan, web_req_ch)
 
 	fmt.Println("main")
 
-//	DEBUG POST events
+	//	DEBUG POST events
 	for {
-		web_update := <- web_req_ch
+		web_update := <-web_req_ch
 		fmt.Print("@main: ")
 		fmt.Println(web_update)
-//		err := json.Unmarshal(json_msg, &m)
-//		if err == nil {
-//			fmt.Println(m)
-//		}
-//		vol_update_ch <- json_msg
+		//		err := json.Unmarshal(json_msg, &m)
+		//		if err == nil {
+		//			fmt.Println(m)
+		//		}
+		//		vol_update_ch <- json_msg
 	}
 
-//	DEBUG sinkinfo volume events
-//	go web_listen(vol_update_ch, web_req_ch)
-//	var m VoleurUpdateType
-//	vol_update_ch := make(chan []byte)
-//	for {
-//		json_msg := <- dec_chan
-//		err := json.Unmarshal(json_msg, &m)
-//		if err == nil {
-//			fmt.Println(m)
-//		}
-//		vol_update_ch <- json_msg
-//	}
+	//	DEBUG sinkinfo volume events
+	//	go web_listen(vol_update_ch, web_req_ch)
+	//	var m VoleurUpdateType
+	//	vol_update_ch := make(chan []byte)
+	//	for {
+	//		json_msg := <- dec_chan
+	//		err := json.Unmarshal(json_msg, &m)
+	//		if err == nil {
+	//			fmt.Println(m)
+	//		}
+	//		vol_update_ch <- json_msg
+	//	}
 }

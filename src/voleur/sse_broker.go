@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"log"
+	"net/http"
 )
 
 // https://robots.thoughtbot.com/writing-a-server-sent-events-server-in-go
@@ -39,7 +39,7 @@ func (broker *Broker) listen() {
 			log.Printf("Removed client. %d registered clients", len(broker.clients))
 
 		case event := <-broker.Notifier:
-//			log.Println("Broadcasting")
+			//			log.Println("Broadcasting")
 			// We got a new event from the outside!
 			// Send event to all connected clients
 			for clientMessageChan, _ := range broker.clients {
@@ -89,7 +89,7 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		// Server Sent Events compatible
 		data := <-messageChan
 		fmt.Printf("sending %s\n", data)
-//		fmt.Fprintln(rw, data)
+		//		fmt.Fprintln(rw, data)
 		fmt.Fprintf(rw, "%s\n", data)
 
 		// Flush the data immediatly instead of buffering it for later.
@@ -100,14 +100,14 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 // Broker factory
 func NewSSEServer(events_in_chan chan []byte) (broker *Broker) {
 	// Instantiate a broker
-	broker = &Broker {
+	broker = &Broker{
 		Notifier:       events_in_chan,
 		newClients:     make(chan chan []byte),
 		closingClients: make(chan chan []byte),
 		clients:        make(map[chan []byte]bool),
 	}
 
-//	fmt.Printf("created broker")
+	//	fmt.Printf("created broker")
 	// Set it running - listening and broadcasting events
 	go broker.listen()
 

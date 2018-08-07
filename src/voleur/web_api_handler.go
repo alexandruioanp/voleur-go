@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
-	"net/http"
-	"fmt"
 )
 
 type APIHandler struct {
@@ -13,8 +13,6 @@ type APIHandler struct {
 }
 
 func post_to_volupdate(data url.Values) (v VoleurUpdateType) {
-	//	var v VoleurUpdateType
-
 	name := data.Get("name")
 	vol, err := strconv.Atoi(data.Get("value"))
 	if err != nil {
@@ -38,8 +36,11 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	fmt.Printf("URL path: %s\n", r.URL.Path)
 
 	switch r.Method {
+
 	case "GET":
 		fmt.Println("GET")
+		fmt.Println(r.URL.Query())
+
 	case "POST":
 		fmt.Println("POST")
 		// Call ParseForm() to parse the raw query and update r.PostForm and r.Form.
@@ -48,8 +49,7 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 			fmt.Fprintf(w, "ParseForm() err: %v", err)
 			return
 		}
-		fmt.Println(r.Form)
-		
+		//		fmt.Println(r.Form)
 		w.WriteHeader(http.StatusOK)
 		api_handler.VolumeEventChannel <- post_to_volupdate(r.PostForm)
 	default:
@@ -60,7 +60,7 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 // API factory
 func NewAPIHandler(event_channel chan VoleurUpdateType) (api_handler *APIHandler) {
 	// Instantiate a handler
-	api_handler = &APIHandler {
+	api_handler = &APIHandler{
 		VolumeEventChannel: event_channel,
 	}
 
