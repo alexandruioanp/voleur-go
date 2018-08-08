@@ -90,6 +90,8 @@ func pactl_get_sinkinput_volume(sinkinput_num string) (int, error) {
 
 func si_details_to_update(si_info sinkInputInfo) (upd VoleurUpdateType) {
 	upd.Name = si_info.Name
+	upd.Type = AddOrUpdate
+	upd.Vol = si_info.Vol
 	if upd.AuxData == nil {
 		upd.AuxData = make(map[string]string)
 	}
@@ -125,15 +127,22 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 	var out VoleurUpdateType
 	var err error
 
-	// TODO check if sinkinput or sink update
-	// TODO handle new, remove sink-input
 	// TODO handle sink volume
 	if strings.Contains(str, "'change' on sink-input") {
 		out, err = pulse_iface.get_updated_sinkinput_details(str)
-		out.Type = Update
 		if err != nil {
 			return VoleurUpdateType{}, err
 		}
+		out.Type = AddOrUpdate
+		
+		// Update sink_input cache
+		bk, ok := pulse_iface.sink_input_cache[out.AuxData["SI_number"]]
+		if !ok {
+			return VoleurUpdateType{}, err
+		}
+		bk.Vol = out.Vol
+		pulse_iface.sink_input_cache[out.AuxData["SI_number"]] = bk
+		
 	} else if strings.Contains(str, "'new' on sink-input") {
 		fmt.Println("new si")
 		// TODO optimise?
@@ -148,10 +157,9 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 		}
 
 		out := si_details_to_update(cached_details)
-		out.Type = Add
+		out.Type = AddOrUpdate
 
 		return out, nil
-		//		return VoleurUpdateType{}, errors.New("Not implemented yet")
 
 	} else if strings.Contains(str, "'remove' on sink-input") {
 		// TODO optimise?
@@ -170,8 +178,6 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 		pulse_iface.build_sink_input_cache()
 
 		return out, nil
-
-		//		return VoleurUpdateType{}, errors.New("Not implemented yet")?
 	} else {
 		return VoleurUpdateType{}, errors.New("Not the update you're looking for")
 	}
@@ -250,6 +256,19 @@ func (pulse_iface *PulseCMDLineInterface) build_sink_input_cache() {
 
 		pulse_iface.sink_input_cache[sinkinput_num] = si_info
 	}
+}
+
+func (pulse_iface *PulseCMDLineInterface) GetAll() (ar_json [][]byte) {
+	for _, sinkinfo := range pulse_iface.sink_input_cache {
+		update := si_details_to_update(sinkinfo)
+		b, err := json.Marshal(update)
+		if err != nil {
+			continue
+		}
+		ar_json = append(ar_json, b)
+	}
+	
+	return
 }
 
 func NewPulseCMDLineInteface() (pulse_iface *PulseCMDLineInterface) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"voleur/ifaces"
 )
 
 // https://robots.thoughtbot.com/writing-a-server-sent-events-server-in-go
@@ -19,6 +20,8 @@ type Broker struct {
 
 	// Client connections registry
 	clients map[chan []byte]bool
+
+	audio_interface ifaces.IAudioInterface
 }
 
 // Listen on different channels and act accordingly
@@ -31,6 +34,11 @@ func (broker *Broker) listen() {
 			// TODO: send sink & sinkinput list
 			broker.clients[s] = true
 			log.Printf("Client added. %d registered clients", len(broker.clients))
+			toggles := broker.audio_interface.GetAll()
+
+			for _, toggle := range toggles {
+				s <- toggle
+			}
 
 		case s := <-broker.closingClients:
 			// A client has dettached and we want to
@@ -98,13 +106,14 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 // Broker factory
-func NewSSEServer(events_in_chan chan []byte) (broker *Broker) {
+func NewSSEServer(events_in_chan chan []byte, audio_interface ifaces.IAudioInterface) (broker *Broker) {
 	// Instantiate a broker
 	broker = &Broker{
-		Notifier:       events_in_chan,
-		newClients:     make(chan chan []byte),
-		closingClients: make(chan chan []byte),
-		clients:        make(map[chan []byte]bool),
+		Notifier:        events_in_chan,
+		newClients:      make(chan chan []byte),
+		closingClients:  make(chan chan []byte),
+		clients:         make(map[chan []byte]bool),
+		audio_interface: audio_interface,
 	}
 
 	//	fmt.Printf("created broker")

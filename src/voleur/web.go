@@ -20,8 +20,10 @@ func myRouter(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func web_listen(events_in chan []byte, web_update_out chan ifaces.VoleurUpdateType) {
-	broker := NewSSEServer(events_in)
+func web_listen(events_in chan []byte,
+				web_update_out chan ifaces.VoleurUpdateType,
+				audio_interface ifaces.IAudioInterface) {
+	broker := NewSSEServer(events_in, audio_interface)
 	api_handler = NewAPIHandler(web_update_out)
 	//	file_server = http.FileServer(http.Dir("./js")) //	different working dir
 	file_server = http.FileServer(http.Dir("../src/voleur/js"))
