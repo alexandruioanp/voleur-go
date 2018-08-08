@@ -98,48 +98,82 @@ func si_details_to_update(si_info sinkInputInfo) (upd VoleurUpdateType) {
 	return upd
 }
 
+func (pulse_iface *PulseCMDLineInterface) get_updated_sinkinput_details(str string) (VoleurUpdateType, error) {
+	r := regexp.MustCompile(`[\d]+`)
+
+	sinkinput_num := r.FindString(str)
+	cached_details, ok := pulse_iface.sink_input_cache[sinkinput_num]
+
+	if !ok {
+		return VoleurUpdateType{}, errors.New("Failed to get sinkinput details")
+	}
+
+	out := si_details_to_update(cached_details)
+	out.AuxData["isSinkVol"] = "0"
+
+	vol, err := pactl_get_sinkinput_volume(sinkinput_num)
+	out.Vol = vol
+
+	if err != nil {
+		return VoleurUpdateType{}, err
+	} else {
+		return out, nil
+	}
+}
+
 func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateType, error) {
 	var out VoleurUpdateType
-	
+	var err error
+
+	// TODO check if sinkinput or sink update
 	// TODO handle new, remove sink-input
 	// TODO handle sink volume
 	if strings.Contains(str, "'change' on sink-input") {
-		r := regexp.MustCompile(`[\d]+`)
-
-		// TODO check if sinkinput or sink update
-		sinkinput_num := r.FindString(str)
-		cached_details, ok := pulse_iface.sink_input_cache[sinkinput_num]
-
-		out = si_details_to_update(cached_details)
+		out, err = pulse_iface.get_updated_sinkinput_details(str)
 		out.Type = Update
-		out.AuxData["isSinkVol"] = "0"
-
-		if !ok {
-			return out, errors.New("Failed to get sinkinput details")
-		}
-
-		vol, err := pactl_get_sinkinput_volume(sinkinput_num)
-		out.Vol = vol
-
-		if err == nil {
-			return out, nil
-		} else {
+		if err != nil {
 			return VoleurUpdateType{}, err
 		}
 	} else if strings.Contains(str, "'new' on sink-input") {
-		// TODO optimise?
 		fmt.Println("new si")
+		// TODO optimise?
 		pulse_iface.build_sink_input_cache()
-		// TODO send update to clients
-		return out, errors.New("Not implemented yet") 
+
+		r := regexp.MustCompile(`[\d]+`)
+		sinkinput_num := r.FindString(str)
+		cached_details, ok := pulse_iface.sink_input_cache[sinkinput_num]
+
+		if !ok {
+			return VoleurUpdateType{}, errors.New("Failed to get sinkinput details")
+		}
+
+		out := si_details_to_update(cached_details)
+		out.Type = Add
+
+		return out, nil
+		//		return VoleurUpdateType{}, errors.New("Not implemented yet")
+
 	} else if strings.Contains(str, "'remove' on sink-input") {
 		// TODO optimise?
 		fmt.Println("si removed")
+		r := regexp.MustCompile(`[\d]+`)
+		sinkinput_num := r.FindString(str)
+		cached_details, ok := pulse_iface.sink_input_cache[sinkinput_num]
+
+		if !ok {
+			return VoleurUpdateType{}, errors.New("Failed to get sinkinput details")
+		}
+
+		out := si_details_to_update(cached_details)
+		out.Type = Remove
+
 		pulse_iface.build_sink_input_cache()
-		// TODO send update to clients
-		return out, errors.New("Not implemented yet")
+
+		return out, nil
+
+		//		return VoleurUpdateType{}, errors.New("Not implemented yet")?
 	} else {
-		return out, errors.New("Not the update you're looking for")
+		return VoleurUpdateType{}, errors.New("Not the update you're looking for")
 	}
 
 	return out, nil
@@ -171,8 +205,9 @@ func (pulse_iface *PulseCMDLineInterface) ApplyChanges(in_chan chan VoleurUpdate
 			fmt.Println("Missing SI_number")
 			continue
 		}
-		
+
 		if _, ok := pulse_iface.sink_input_cache[si_number]; !ok {
+			fmt.Println("Invalid SI number")
 			continue
 		}
 		cmd := exec.Command("pactl", "set-sink-input-volume", si_number, strconv.Itoa(vol_to_set))
