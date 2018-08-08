@@ -3,34 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
 	"voleur/ifaces"
+	"encoding/json"
 )
 
 type APIHandler struct {
 	// POST data is processed and pushed to this channel
 	VolumeEventChannel chan ifaces.VoleurUpdateType
-}
-
-func post_to_volupdate(data url.Values) (v ifaces.VoleurUpdateType) {
-	name := data.Get("name")
-	vol, err := strconv.Atoi(data.Get("value"))
-	if err != nil {
-		return
-	}
-
-	isSinkVol, err := strconv.ParseBool(data.Get("isSinkVol"))
-	if err != nil {
-		return
-	}
-
-	v.Name = name
-	v.Vol = vol
-	v.IsSinkVol = isSinkVol
-	v.Type = ifaces.Update
-
-	return
 }
 
 func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -43,16 +22,15 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		fmt.Println(r.URL.Query())
 
 	case "POST":
-		fmt.Println("POST")
-		// Call ParseForm() to parse the raw query and update r.PostForm and r.Form.
-		if err := r.ParseForm(); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "ParseForm() err: %v", err)
-			return
-		}
-		//		fmt.Println(r.Form)
 		w.WriteHeader(http.StatusOK)
-		api_handler.VolumeEventChannel <- post_to_volupdate(r.PostForm)
+		
+    	upd := ifaces.VoleurUpdateType{}
+    	decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&upd)
+
+		if err == nil {
+    		api_handler.VolumeEventChannel <- upd
+		}
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}

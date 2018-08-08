@@ -13,7 +13,7 @@ func main() {
 
 	go web_listen(change_chan, web_req_ch)
 
-	var audio_interface ifaces.IAudioInterface = &ifaces.PulseCMDLineInterface{}
+	var audio_interface ifaces.IAudioInterface = ifaces.NewPulseCMDLineInteface()
 	go audio_interface.Listen(change_chan)
 	go audio_interface.ApplyChanges(web_req_ch)
 

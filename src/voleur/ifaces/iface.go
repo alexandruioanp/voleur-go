@@ -13,9 +13,8 @@ const ( // iota is reset to 0
 type VoleurUpdateType struct {
 	Name      string
 	Vol       int
-	IsSinkVol bool
 	Type      UpdateType
-	si_number string
+	AuxData   map[string]string
 }
 
 type IAudioInterface interface {
