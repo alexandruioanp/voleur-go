@@ -13,6 +13,7 @@ type VoleurUpdateType struct {
 	Name    string				`json:"name"`
 	Vol     int					`json:"vol"`
 	Type    UpdateType			`json:"type"`
+	UID		string				`json:"uid"`
 	AuxData map[string]string	`json:"auxdata"`
 }
 

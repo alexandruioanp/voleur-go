@@ -31,6 +31,8 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 		if err == nil {
 			api_handler.VolumeEventChannel <- upd
+		} else {
+			fmt.Println("error decoding POST JSON")
 		}
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")

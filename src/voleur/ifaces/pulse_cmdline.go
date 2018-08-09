@@ -95,7 +95,7 @@ func si_details_to_update(si_info sinkInputInfo) (upd VoleurUpdateType) {
 	if upd.AuxData == nil {
 		upd.AuxData = make(map[string]string)
 	}
-	upd.AuxData["SI_number"] = si_info.SI_number
+	upd.UID = si_info.SI_number
 
 	return upd
 }
@@ -136,12 +136,12 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 		out.Type = AddOrUpdate
 		
 		// Update sink_input cache
-		bk, ok := pulse_iface.sink_input_cache[out.AuxData["SI_number"]]
+		bk, ok := pulse_iface.sink_input_cache[out.UID]
 		if !ok {
 			return VoleurUpdateType{}, err
 		}
 		bk.Vol = out.Vol
-		pulse_iface.sink_input_cache[out.AuxData["SI_number"]] = bk
+		pulse_iface.sink_input_cache[out.UID] = bk
 		
 	} else if strings.Contains(str, "'new' on sink-input") {
 		fmt.Println("new si")
@@ -206,12 +206,8 @@ func (pulse_iface *PulseCMDLineInterface) ApplyChanges(in_chan chan VoleurUpdate
 		update := <-in_chan
 		vol_to_set := (PA_VOLUME_MAX * update.Vol) / 100
 		fmt.Println(update)
-		si_number, ok := update.AuxData["SI_number"]
-		if !ok {
-			fmt.Println("Missing SI_number")
-			continue
-		}
-
+		si_number := update.UID
+		
 		if _, ok := pulse_iface.sink_input_cache[si_number]; !ok {
 			fmt.Println("Invalid SI number")
 			continue
