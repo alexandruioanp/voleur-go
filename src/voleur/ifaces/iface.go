@@ -10,10 +10,10 @@ const ( // iota is reset to 0
 )
 
 type VoleurUpdateType struct {
-	Name    string
-	Vol     int
-	Type    UpdateType
-	AuxData map[string]string
+	Name    string				`json:"name"`
+	Vol     int					`json:"vol"`
+	Type    UpdateType			`json:"type"`
+	AuxData map[string]string	`json:"auxdata"`
 }
 
 type IAudioInterface interface {
