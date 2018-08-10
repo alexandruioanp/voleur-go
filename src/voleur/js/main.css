@@ -13,3 +13,15 @@
 	float: none;
 	display: inline-block;
 }
+
+.app_name {
+    padding: 0;
+    margin: 0;
+}
+
+.uid_small {
+    font-size: smaller;
+    color: silver;
+    padding: 0;
+    margin: 0;
+}

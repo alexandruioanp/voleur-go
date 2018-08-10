@@ -1,8 +1,29 @@
+var UpdateType;
+(function (UpdateType) {
+    UpdateType[UpdateType["AddOrUpdate"] = 0] = "AddOrUpdate";
+    UpdateType[UpdateType["Remove"] = 1] = "Remove";
+})(UpdateType || (UpdateType = {}));
 var evtSource = new EventSource("/events");
 evtSource.onmessage = function (e) {
     var decoded = decode_payload(e);
-    update_vol(decoded);
+    if (decoded.type == UpdateType.AddOrUpdate) {
+        console.log("update");
+        console.log(decoded);
+        update_vol(decoded);
+    }
+    else if (decoded.type == UpdateType.Remove) {
+        console.log("remove");
+        console.log(decoded);
+        remove_slider(decoded);
+    }
 };
+function remove_slider(info) {
+    var element = document.getElementById("box" + info.uid);
+    console.log("removing");
+    console.log(element);
+    console.log(element.parentNode);
+    element.parentNode.removeChild(element);
+}
 function decode_payload(stin) {
     return JSON.parse(stin.data);
 }
@@ -11,37 +32,40 @@ function update_vol(info) {
     var volBoxes = volDiv.children;
     for (var i = 0; i < volBoxes.length; i++) {
         var box = volBoxes[i];
-        if (box.id == info.uid) {
-            set_volume(box, info.vol);
+        console.log("box id" + box.id);
+        if (box.id == "box" + info.uid) {
+            console.log("found box with ID" + box.id);
+            set_volume(box, info);
             return;
         }
     }
     create_div(info);
 }
-function set_volume(volBox, volume) {
-    $("#slider" + volBox.id).slider("setValue", volume);
+function set_volume(volBox, update) {
+    $("#slider" + update.uid).slider("setValue", update.vol);
 }
 function create_div(info) {
     var volDiv = document.getElementById('volume-container');
     var sliderElement = make_slider(info);
     var sliderDiv = document.createElement("div");
-    sliderDiv.id = info.uid;
+    sliderDiv.id = "box" + info.uid;
     sliderDiv.appendChild(sliderElement);
     sliderDiv.classList.add("sliderdiv");
     sliderDiv.classList.add("border");
-    sliderDiv.innerHTML += '<p>' + info.name + '</p>';
+    sliderDiv.innerHTML += '<p class="app_name">' + info.name + '</p>';
+    sliderDiv.innerHTML += '<p class="uid_small">#' + info.uid + '</p>';
     volDiv.appendChild(sliderDiv);
     $("#" + sliderElement.id).slider({
         reversed: true
     });
     $("#" + sliderElement.id).slider('setValue', String(info.vol));
     $("#" + sliderElement.id).slider().on("change", slider_slid);
-    console.log($("#" + sliderElement.id));
     $("#" + sliderDiv.id).on("mousedown", slider_mousedown);
     $("#" + sliderDiv.id).on("mouseup", slider_mouseup);
 }
 function slider_mousedown(ev) {
     console.log("mousedown");
+    var ignore;
 }
 function slider_mouseup(ev) {
     console.log("mouseup");
