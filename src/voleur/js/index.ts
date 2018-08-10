@@ -10,13 +10,16 @@ interface Update {
     type: number;
 }
 
-declare var ignore_updates: boolean = false;
+let ignore_updates = false;
+let ignore_updates_enabled = true;
+let ignored_uid = "";
 
-var evtSource = new EventSource("/events");
+let evtSource = new EventSource("/events");
 
 evtSource.onmessage = function(e)
 {
     let decoded = decode_payload(e);
+
     if(decoded.type == UpdateType.AddOrUpdate) {
         update_vol(decoded);
     } else if(decoded.type == UpdateType.Remove) {
@@ -36,24 +39,20 @@ function decode_payload(stin: MessageEvent): Update
 
 function update_vol(info: Update)
 {
+    console.log("Ignore? " + ignore_updates + " " + ignored_uid == info.uid)
+    if(ignore_updates_enabled && ignore_updates && ignored_uid == info.uid)
+    {
+
+        return;
+    }
+    
     let box = document.getElementById("box" + info.uid);
+
     if(box) {
         set_volume(box, info);
     } else {
         create_div(info);
     }
-    // let volDiv  = document.getElementById('volume-container');
-    // let volBoxes = volDiv.children;
-    // for(let i = 0; i < volBoxes.length; i++)
-    // {
-    //     let box = volBoxes[i];
-    //     if(box.id == "box" + info.uid)
-    //     {
-    //         set_volume(box, info);
-    //         return;
-    //     }
-    // }
-    // create_div(info);
 }
 
 function set_volume(volBox, update: Update)
@@ -86,12 +85,15 @@ function create_div(info: Update)
 }
 
 function slider_mousedown(ev) {
-    console.log("mousedown");
+    // console.log("mousedown");
+    // console.log(ev.currentTarget.id);
     ignore_updates = true; 
+    ignored_uid = ev.currentTarget.id.slice("box".length);
 }
 
 function slider_mouseup(ev) {
-    console.log("mouseup");
+    // console.log("mouseup");
+    // console.log(ev.currentTarget.id);
     ignore_updates = false;
 }
 

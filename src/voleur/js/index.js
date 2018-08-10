@@ -3,6 +3,9 @@ var UpdateType;
     UpdateType[UpdateType["AddOrUpdate"] = 0] = "AddOrUpdate";
     UpdateType[UpdateType["Remove"] = 1] = "Remove";
 })(UpdateType || (UpdateType = {}));
+var ignore_updates = false;
+var ignore_updates_enabled = true;
+var ignored_uid = "";
 var evtSource = new EventSource("/events");
 evtSource.onmessage = function (e) {
     var decoded = decode_payload(e);
@@ -21,6 +24,10 @@ function decode_payload(stin) {
     return JSON.parse(stin.data);
 }
 function update_vol(info) {
+    console.log("Ignore? " + ignore_updates + " " + ignored_uid == info.uid);
+    if (ignore_updates_enabled && ignore_updates && ignored_uid == info.uid) {
+        return;
+    }
     var box = document.getElementById("box" + info.uid);
     if (box) {
         set_volume(box, info);
@@ -28,18 +35,6 @@ function update_vol(info) {
     else {
         create_div(info);
     }
-    // let volDiv  = document.getElementById('volume-container');
-    // let volBoxes = volDiv.children;
-    // for(let i = 0; i < volBoxes.length; i++)
-    // {
-    //     let box = volBoxes[i];
-    //     if(box.id == "box" + info.uid)
-    //     {
-    //         set_volume(box, info);
-    //         return;
-    //     }
-    // }
-    // create_div(info);
 }
 function set_volume(volBox, update) {
     $("#slider" + update.uid).slider("setValue", update.vol);
@@ -64,11 +59,14 @@ function create_div(info) {
     $("#" + sliderDiv.id).on("mouseup", slider_mouseup);
 }
 function slider_mousedown(ev) {
-    console.log("mousedown");
+    // console.log("mousedown");
+    // console.log(ev.currentTarget.id);
     ignore_updates = true;
+    ignored_uid = ev.currentTarget.id.slice("box".length);
 }
 function slider_mouseup(ev) {
-    console.log("mouseup");
+    // console.log("mouseup");
+    // console.log(ev.currentTarget.id);
     ignore_updates = false;
 }
 function slider_slid(ev) {
