@@ -1,0 +1,15 @@
+.sliderdiv {
+	float: left;
+	padding: 1em;
+	margin: 1em;
+	text-align: center;
+}
+
+.mainvoldiv {
+	padding: 1em;
+}
+
+.slider {
+	float: none;
+	display: inline-block;
+}
