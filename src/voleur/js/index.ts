@@ -18,21 +18,14 @@ evtSource.onmessage = function(e)
 {
     let decoded = decode_payload(e);
     if(decoded.type == UpdateType.AddOrUpdate) {
-        console.log("update");
-        console.log(decoded);
         update_vol(decoded);
     } else if(decoded.type == UpdateType.Remove) {
-        console.log("remove");
-        console.log(decoded);
         remove_slider(decoded);
     }    
 }
 
 function remove_slider(info: Update) {
     let element = document.getElementById("box" + info.uid);
-    console.log("removing");
-    console.log(element);
-    console.log(element.parentNode);
     element.parentNode.removeChild(element);
 }
 
@@ -43,20 +36,24 @@ function decode_payload(stin: MessageEvent): Update
 
 function update_vol(info: Update)
 {
-    let volDiv  = document.getElementById('volume-container');
-    let volBoxes = volDiv.children;
-    for(let i = 0; i < volBoxes.length; i++)
-    {
-        let box = volBoxes[i];
-        console.log("box id" + box.id);
-        if(box.id == "box" + info.uid)
-        {
-            console.log("found box with ID" + box.id);
-            set_volume(box, info);
-            return;
-        }
+    let box = document.getElementById("box" + info.uid);
+    if(box) {
+        set_volume(box, info);
+    } else {
+        create_div(info);
     }
-    create_div(info);
+    // let volDiv  = document.getElementById('volume-container');
+    // let volBoxes = volDiv.children;
+    // for(let i = 0; i < volBoxes.length; i++)
+    // {
+    //     let box = volBoxes[i];
+    //     if(box.id == "box" + info.uid)
+    //     {
+    //         set_volume(box, info);
+    //         return;
+    //     }
+    // }
+    // create_div(info);
 }
 
 function set_volume(volBox, update: Update)
@@ -90,11 +87,12 @@ function create_div(info: Update)
 
 function slider_mousedown(ev) {
     console.log("mousedown");
-    let ignore 
+    ignore_updates = true; 
 }
 
 function slider_mouseup(ev) {
     console.log("mouseup");
+    ignore_updates = false;
 }
 
 function slider_slid(ev)
@@ -109,7 +107,6 @@ function make_slider(info: Update)
     fakeSlider.innerHTML += '<input style="float:center;" id="slider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="-3" data-slider-orientation="vertical"/>';
     let slider = fakeSlider.firstChild;
     slider.id = "slider" + info.uid;
-    console.log("slider id: " + slider.id);
 
     return slider;
 }
