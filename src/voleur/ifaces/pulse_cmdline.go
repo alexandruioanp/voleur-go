@@ -79,7 +79,11 @@ func pactl_get_sinkinput_volume(sinkinput_num string) (int, error) {
 	for _, el := range strings.Split(string(cmd_out), "Sink Input #")[1:] {
 		first_line := strings.Split(el, "\n")[0]
 		if first_line == sinkinput_num {
-			vol_left := regex_volume.FindStringSubmatch(el)[1]
+			vol_regex_res := regex_volume.FindStringSubmatch(el)
+			vol_left := "0"
+			if len(vol_regex_res) > 2 {
+				vol_left = regex_volume.FindStringSubmatch(el)[1]	
+			}
 			vol, err := strconv.Atoi(vol_left)
 			return vol, err
 		}
@@ -243,8 +247,25 @@ func (pulse_iface *PulseCMDLineInterface) build_sink_input_cache() {
 		regex_volume := regexp.MustCompile(`front-left: .+ (\d+)%`)
 
 		sinkinput_num := si_num_r.FindString(first_line)
-		app_name := regex_app_name.FindStringSubmatch(el)[1]
-		vol_left := regex_volume.FindStringSubmatch(el)[1]
+		
+		app_name := ""
+		vol_left := "0"
+				
+		app_name_res := regex_app_name.FindStringSubmatch(el)
+		if len(app_name_res) < 2 {
+			regex_media_name := regexp.MustCompile(`media.name = "(.*)"`)
+			media_name_res := regex_media_name.FindStringSubmatch(el)
+			if len(media_name_res) >= 2 {
+				app_name = media_name_res[1]
+			}
+		} else {
+			app_name = app_name_res[1]	
+		}
+		
+		vol_left_res := regex_volume.FindStringSubmatch(el)
+		if len(vol_left_res) >= 2 {
+			vol_left = regex_volume.FindStringSubmatch(el)[1]
+		}
 
 		si_info.Name = app_name
 		si_info.Vol, _ = strconv.Atoi(vol_left)
