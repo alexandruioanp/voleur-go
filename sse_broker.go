@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"voleur/ifaces"
+    "github.com/alexandruioanp/volgotest/ifaces"
 )
 
 // https://robots.thoughtbot.com/writing-a-server-sent-events-server-in-go

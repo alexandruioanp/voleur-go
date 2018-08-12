@@ -2,21 +2,21 @@ package main
 
 import (
 	"fmt"
+	"github.com/alexandruioanp/volgotest/ifaces"
 	"time"
-	"voleur/ifaces"
-//	"os"
-//	"log"
+	//	"os"
+	//	"log"
 )
 
 func main() {
 	fmt.Println("main")
 
-//	dir, err := os.Getwd()
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	fmt.Println(dir)
-	
+	//	dir, err := os.Getwd()
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	fmt.Println(dir)
+
 	change_chan := make(chan []byte)
 	web_req_ch := make(chan ifaces.VoleurUpdateType)
 

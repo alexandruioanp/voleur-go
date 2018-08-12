@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/alexandruioanp/volgotest/ifaces"
 	"net/http"
-	"voleur/ifaces"
 )
 
 type APIHandler struct {
@@ -20,7 +20,7 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	// TODO
 	case "GET":
 		fmt.Print("GET ")
-		fmt.Printf("%v %v\n", r.URL, r.URL.Path)//
+		fmt.Printf("%v %v\n", r.URL, r.URL.Path) //
 
 	case "POST":
 		w.WriteHeader(http.StatusOK)
