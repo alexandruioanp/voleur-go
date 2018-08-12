@@ -4,13 +4,13 @@ var UpdateType;
     UpdateType[UpdateType["Remove"] = 1] = "Remove";
 })(UpdateType || (UpdateType = {}));
 var ignore_updates = false;
-var ignore_updates_enabled = false;
+var ignore_updates_enabled = true;
 var ignored_uid = "";
 var evtSource = new EventSource("/events");
 evtSource.onmessage = function (e) {
     var decoded = decode_payload(e);
     if (decoded.type == UpdateType.AddOrUpdate) {
-        update_vol(decoded);
+        update_val(decoded);
     }
     else if (decoded.type == UpdateType.Remove) {
         remove_slider(decoded);
@@ -23,24 +23,24 @@ function remove_slider(info) {
 function decode_payload(stin) {
     return JSON.parse(stin.data);
 }
-function update_vol(info) {
+function update_val(info) {
     // console.log("Ignore? " + ignore_updates + " " + ignored_uid == info.uid)
     if (ignore_updates_enabled && ignore_updates && ignored_uid == info.uid) {
         return;
     }
     var box = document.getElementById("box" + info.uid);
     if (box) {
-        set_volume(box, info);
+        set_value(box, info);
     }
     else {
         create_div(info);
     }
 }
-function set_volume(volBox, update) {
-    $("#slider" + update.uid).slider("setValue", update.vol);
+function set_value(valBox, update) {
+    $("#slider" + update.uid).slider("setValue", update.val);
 }
 function create_div(info) {
-    var volDiv = document.getElementById('volume-container');
+    var valDiv = document.getElementById('value-container');
     var sliderElement = make_slider(info);
     var sliderDiv = document.createElement("div");
     sliderDiv.id = "box" + info.uid;
@@ -76,11 +76,12 @@ function create_div(info) {
         image.src = "data:image/" + extension + ";base64," + info.auxdata.icon;
         sliderDiv.appendChild(image);
     }
-    volDiv.appendChild(sliderDiv);
+    valDiv.appendChild(sliderDiv);
+    console.log(info);
     $("#" + sliderElement.id).slider({
         reversed: true
     });
-    $("#" + sliderElement.id).slider('setValue', String(info.vol));
+    $("#" + sliderElement.id).slider('setValue', String(info.val));
     $("#" + sliderElement.id).slider().on("change", slider_slid);
     $("#" + sliderDiv.id).on("mousedown", slider_mousedown);
     $("#" + sliderDiv.id).on("mouseup", slider_mouseup);
@@ -98,7 +99,7 @@ function slider_mouseup(ev) {
 }
 function slider_slid(ev) {
     console.log(ev.target.id + " " + ev.target.value);
-    $.post("/volOps", JSON.stringify({ uid: ev.target.id.slice("slider".length), vol: parseInt(ev.target.value, 10) }));
+    $.post("/valOps", JSON.stringify({ uid: ev.target.id.slice("slider".length), val: parseInt(ev.target.value, 10) }));
 }
 function make_slider(info) {
     var fakeSlider = document.createElement("div");

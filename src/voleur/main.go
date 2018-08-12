@@ -20,7 +20,7 @@ func main() {
 	change_chan := make(chan []byte)
 	web_req_ch := make(chan ifaces.VoleurUpdateType)
 
-	var audio_interface ifaces.IAudioInterface = ifaces.NewPulseCMDLineInteface()
+	var audio_interface ifaces.IControlInterface = ifaces.NewPulseCMDLineInteface()
 	go audio_interface.Listen(change_chan)
 	go audio_interface.ApplyChanges(web_req_ch)
 

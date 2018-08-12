@@ -9,7 +9,7 @@ import (
 
 type APIHandler struct {
 	// POST data is processed and pushed to this channel
-	VolumeEventChannel chan ifaces.VoleurUpdateType
+	ChangeEventChannel chan ifaces.VoleurUpdateType
 }
 
 func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		err := decoder.Decode(&upd)
 
 		if err == nil {
-			api_handler.VolumeEventChannel <- upd
+			api_handler.ChangeEventChannel <- upd
 		} else {
 			fmt.Println("error decoding POST JSON")
 		}
@@ -43,7 +43,7 @@ func (api_handler *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 func NewAPIHandler(event_channel chan ifaces.VoleurUpdateType) (api_handler *APIHandler) {
 	// Instantiate a handler
 	api_handler = &APIHandler{
-		VolumeEventChannel: event_channel,
+		ChangeEventChannel: event_channel,
 	}
 
 	return

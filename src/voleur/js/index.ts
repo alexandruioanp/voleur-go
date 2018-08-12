@@ -5,7 +5,7 @@ enum UpdateType {
 
 interface Update {
     name: string;
-    vol: number;
+    val: number;
     uid: string;
     type: number;
 }
@@ -21,7 +21,7 @@ evtSource.onmessage = function(e)
     let decoded = decode_payload(e);
 
     if(decoded.type == UpdateType.AddOrUpdate) {
-        update_vol(decoded);
+        update_val(decoded);
     } else if(decoded.type == UpdateType.Remove) {
         remove_slider(decoded);
     }    
@@ -37,7 +37,7 @@ function decode_payload(stin: MessageEvent): Update
     return JSON.parse(stin.data) as Update;
 }
 
-function update_vol(info: Update)
+function update_val(info: Update)
 {
     // console.log("Ignore? " + ignore_updates + " " + ignored_uid == info.uid)
     if(ignore_updates_enabled && ignore_updates && ignored_uid == info.uid)
@@ -48,20 +48,20 @@ function update_vol(info: Update)
     let box = document.getElementById("box" + info.uid);
 
     if(box) {
-        set_volume(box, info);
+        set_value(box, info);
     } else {
         create_div(info);
     }
 }
 
-function set_volume(volBox, update: Update)
+function set_value(valBox, update: Update)
 {
-    $("#slider" + update.uid).slider("setValue", update.vol);
+    $("#slider" + update.uid).slider("setValue", update.val);
 }
 
 function create_div(info: Update)
 {
-    let volDiv  = document.getElementById('volume-container');
+    let valDiv  = document.getElementById('value-container');
     
     let sliderElement = make_slider(info);
     let sliderDiv = document.createElement("div");
@@ -100,12 +100,14 @@ function create_div(info: Update)
         sliderDiv.appendChild(image);
     }
 
-    volDiv.appendChild(sliderDiv);
+    valDiv.appendChild(sliderDiv);
     
+    console.log(info);
+
     $("#" + sliderElement.id).slider({
         reversed : true
     });
-    $("#" + sliderElement.id).slider('setValue', String(info.vol));
+    $("#" + sliderElement.id).slider('setValue', String(info.val));
     $("#" + sliderElement.id).slider().on("change", slider_slid);
     $("#" + sliderDiv.id).on("mousedown", slider_mousedown);
     $("#" + sliderDiv.id).on("mouseup", slider_mouseup);
@@ -127,7 +129,7 @@ function slider_mouseup(ev) {
 function slider_slid(ev)
 {
     console.log(ev.target.id + " " + ev.target.value);
-    $.post("/volOps", JSON.stringify({uid: ev.target.id.slice("slider".length), vol: parseInt(ev.target.value, 10)}));
+    $.post("/valOps", JSON.stringify({uid: ev.target.id.slice("slider".length), val: parseInt(ev.target.value, 10)}));
 }
 
 function make_slider(info: Update)

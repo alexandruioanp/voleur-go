@@ -11,13 +11,13 @@ const ( // iota is reset to 0
 
 type VoleurUpdateType struct {
 	Name    string				`json:"name"`
-	Vol     int					`json:"vol"`
+	Val     int					`json:"val"`
 	Type    UpdateType			`json:"type"`
 	UID		string				`json:"uid"`
 	AuxData map[string]string	`json:"auxdata"`
 }
 
-type IAudioInterface interface {
+type IControlInterface interface {
 	Listen(chan []byte)
 	ApplyChanges(chan VoleurUpdateType)
 	GetAll() [][]byte

@@ -98,7 +98,7 @@ func pactl_get_sinkinput_volume(sinkinput_num string) (int, error) {
 func si_details_to_update(si_info sinkInputInfo) (upd VoleurUpdateType) {
 	upd.Name = si_info.Name
 	upd.Type = AddOrUpdate
-	upd.Vol = si_info.Vol
+	upd.Val = si_info.Vol
 	if upd.AuxData == nil {
 		upd.AuxData = make(map[string]string)
 	}
@@ -122,7 +122,7 @@ func (pulse_iface *PulseCMDLineInterface) get_updated_sinkinput_details(str stri
 	out.AuxData["isSinkVol"] = "0"
 
 	vol, err := pactl_get_sinkinput_volume(sinkinput_num)
-	out.Vol = vol
+	out.Val = vol
 
 	if err != nil {
 		return VoleurUpdateType{}, err
@@ -148,7 +148,7 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 		if !ok {
 			return VoleurUpdateType{}, err
 		}
-		bk.Vol = out.Vol
+		bk.Vol = out.Val
 		pulse_iface.sink_input_cache[out.UID] = bk
 
 	} else if strings.Contains(str, "'new' on sink-input") {
@@ -212,7 +212,7 @@ func (pulse_iface *PulseCMDLineInterface) decode(change_in chan string, json_out
 func (pulse_iface *PulseCMDLineInterface) ApplyChanges(in_chan chan VoleurUpdateType) {
 	for {
 		update := <-in_chan
-		vol_to_set := (PA_VOLUME_MAX * update.Vol) / 100
+		vol_to_set := (PA_VOLUME_MAX * update.Val) / 100
 		fmt.Println("Will apply ", update)
 		si_number := update.UID
 

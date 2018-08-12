@@ -21,7 +21,7 @@ type Broker struct {
 	// Client connections registry
 	clients map[chan []byte]bool
 
-	audio_interface ifaces.IAudioInterface
+	audio_interface ifaces.IControlInterface
 }
 
 // Listen on different channels and act accordingly
@@ -106,7 +106,7 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 // Broker factory
-func NewSSEServer(events_in_chan chan []byte, audio_interface ifaces.IAudioInterface) (broker *Broker) {
+func NewSSEServer(events_in_chan chan []byte, audio_interface ifaces.IControlInterface) (broker *Broker) {
 	// Instantiate a broker
 	broker = &Broker{
 		Notifier:        events_in_chan,
