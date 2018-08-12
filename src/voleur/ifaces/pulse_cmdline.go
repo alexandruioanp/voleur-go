@@ -81,8 +81,8 @@ func pactl_get_sinkinput_volume(sinkinput_num string) (int, error) {
 		if first_line == sinkinput_num {
 			vol_regex_res := regex_volume.FindStringSubmatch(el)
 			vol_left := "0"
-			if len(vol_regex_res) > 2 {
-				vol_left = regex_volume.FindStringSubmatch(el)[1]	
+			if len(vol_regex_res) >= 2 {
+				vol_left = regex_volume.FindStringSubmatch(el)[1]
 			}
 			vol, err := strconv.Atoi(vol_left)
 			return vol, err
