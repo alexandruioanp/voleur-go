@@ -4,7 +4,7 @@ var UpdateType;
     UpdateType[UpdateType["Remove"] = 1] = "Remove";
 })(UpdateType || (UpdateType = {}));
 var ignore_updates = false;
-var ignore_updates_enabled = true;
+var ignore_updates_enabled = false;
 var ignored_uid = "";
 var evtSource = new EventSource("/events");
 evtSource.onmessage = function (e) {
@@ -24,7 +24,7 @@ function decode_payload(stin) {
     return JSON.parse(stin.data);
 }
 function update_vol(info) {
-    console.log("Ignore? " + ignore_updates + " " + ignored_uid == info.uid);
+    // console.log("Ignore? " + ignore_updates + " " + ignored_uid == info.uid)
     if (ignore_updates_enabled && ignore_updates && ignored_uid == info.uid) {
         return;
     }
@@ -47,8 +47,35 @@ function create_div(info) {
     sliderDiv.appendChild(sliderElement);
     sliderDiv.classList.add("sliderdiv");
     sliderDiv.classList.add("border");
-    sliderDiv.innerHTML += '<p class="app_name">' + info.name + '</p>';
-    sliderDiv.innerHTML += '<p class="uid_small">#' + info.uid + '</p>';
+    new_html = '<div class="slider-info-container">';
+    new_html += '<p class="app_name">' + info.name + '</p>';
+    new_html += '<p class="uid_small">#' + info.uid + '</p>';
+    new_html += '</div>';
+    sliderDiv.innerHTML += new_html;
+    if (info.auxdata.icon) {
+        var image = new Image();
+        // https://stackoverflow.com/questions/27886677/javascript-get-extension-from-base64-image
+        var decodedData = window.atob(info.auxdata.icon.slice(0, 20));
+        var extension = undefined;
+        // do something like this
+        var lowerCase = decodedData.toLowerCase();
+        // console.log(lowerCase);
+        if (lowerCase.indexOf("png") !== -1) {
+            extension = "png";
+        }
+        else if (lowerCase.indexOf("jpg") !== -1 || lowerCase.indexOf("jpeg") !== -1) {
+            extension = "jpg";
+        }
+        else if (lowerCase.indexOf("svg") !== -1 || lowerCase.indexOf("xml") !== -1) {
+            extension = "svg+xml";
+        }
+        else {
+            extension = "tiff";
+        }
+        // alternatively, you can do this
+        image.src = "data:image/" + extension + ";base64," + info.auxdata.icon;
+        sliderDiv.appendChild(image);
+    }
     volDiv.appendChild(sliderDiv);
     $("#" + sliderElement.id).slider({
         reversed: true

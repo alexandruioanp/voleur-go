@@ -96,7 +96,7 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		// Write to the ResponseWriter
 		// Server Sent Events compatible
 		data := <-messageChan
-		fmt.Printf("sending `data: %s`\n", data)
+//		fmt.Printf("sending `data: %s`\n", data)
 		//		fmt.Fprintln(rw, data)
 		fmt.Fprintf(rw, "data: %s\n\n", data)
 

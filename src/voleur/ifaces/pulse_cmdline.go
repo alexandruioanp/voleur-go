@@ -11,12 +11,15 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"io/ioutil"
+	"encoding/base64"
 )
 
 type sinkInputInfo struct {
 	Name      string
 	Vol       int
 	SI_number string
+	Icon	  string
 }
 
 type PulseCMDLineInterface struct {
@@ -100,6 +103,7 @@ func si_details_to_update(si_info sinkInputInfo) (upd VoleurUpdateType) {
 		upd.AuxData = make(map[string]string)
 	}
 	upd.UID = si_info.SI_number
+	upd.AuxData["icon"] = si_info.Icon
 
 	return upd
 }
@@ -138,7 +142,7 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 			return VoleurUpdateType{}, err
 		}
 		out.Type = AddOrUpdate
-		
+
 		// Update sink_input cache
 		bk, ok := pulse_iface.sink_input_cache[out.UID]
 		if !ok {
@@ -146,7 +150,7 @@ func (pulse_iface *PulseCMDLineInterface) parse_event(str string) (VoleurUpdateT
 		}
 		bk.Vol = out.Vol
 		pulse_iface.sink_input_cache[out.UID] = bk
-		
+
 	} else if strings.Contains(str, "'new' on sink-input") {
 		fmt.Println("new si")
 		// TODO optimise?
@@ -209,9 +213,9 @@ func (pulse_iface *PulseCMDLineInterface) ApplyChanges(in_chan chan VoleurUpdate
 	for {
 		update := <-in_chan
 		vol_to_set := (PA_VOLUME_MAX * update.Vol) / 100
-		fmt.Println(update)
+		fmt.Println("Will apply ", update)
 		si_number := update.UID
-		
+
 		if _, ok := pulse_iface.sink_input_cache[si_number]; !ok {
 			fmt.Println("Invalid SI number")
 			continue
@@ -228,6 +232,8 @@ func (pulse_iface *PulseCMDLineInterface) ApplyChanges(in_chan chan VoleurUpdate
 		}
 	}
 }
+
+var include_icon = true
 
 func (pulse_iface *PulseCMDLineInterface) build_sink_input_cache() {
 	pulse_iface.sink_input_cache = make(map[string]sinkInputInfo)
@@ -247,10 +253,10 @@ func (pulse_iface *PulseCMDLineInterface) build_sink_input_cache() {
 		regex_volume := regexp.MustCompile(`front-left: .+ (\d+)%`)
 
 		sinkinput_num := si_num_r.FindString(first_line)
-		
+
 		app_name := ""
 		vol_left := "0"
-				
+
 		app_name_res := regex_app_name.FindStringSubmatch(el)
 		if len(app_name_res) < 2 {
 			regex_media_name := regexp.MustCompile(`media.name = "(.*)"`)
@@ -259,14 +265,28 @@ func (pulse_iface *PulseCMDLineInterface) build_sink_input_cache() {
 				app_name = media_name_res[1]
 			}
 		} else {
-			app_name = app_name_res[1]	
+			app_name = app_name_res[1]
 		}
-		
+
 		vol_left_res := regex_volume.FindStringSubmatch(el)
 		if len(vol_left_res) >= 2 {
 			vol_left = regex_volume.FindStringSubmatch(el)[1]
 		}
 
+		if include_icon {
+			//		application.icon_name = "spotify-client"
+			regex_icon_name := regexp.MustCompile(`application.icon_name = "(.*)"`)
+	
+			icon_name_res := regex_icon_name.FindStringSubmatch(el)
+			if len(icon_name_res) >= 2 {
+				icon_name := icon_name_res[1]
+//				fmt.Println("Icon name " + icon_name)
+				icon_path := get_icon_path(icon_name)
+				fmt.Println("Icon path " + icon_path)
+				si_info.Icon = get_base64_file(icon_path)
+			}
+		}
+		
 		si_info.Name = app_name
 		si_info.Vol, _ = strconv.Atoi(vol_left)
 		si_info.SI_number = sinkinput_num
@@ -275,16 +295,36 @@ func (pulse_iface *PulseCMDLineInterface) build_sink_input_cache() {
 	}
 }
 
+func get_base64_file(path string) (enc string) {
+	buff, err := ioutil.ReadFile(strings.TrimSpace(path))
+	if err != nil {
+		fmt.Println("err:", err)
+		return ""
+	}
+
+	return base64.StdEncoding.EncodeToString(buff)
+}
+
+func get_icon_path(name string) (path string) {
+	cmd_out, err := exec.Command("./src/voleur/aux/get_icon_path_gtk.py", name).Output()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+	}
+	
+	return string(cmd_out)
+}
+
 func (pulse_iface *PulseCMDLineInterface) GetAll() (ar_json [][]byte) {
 	for _, sinkinfo := range pulse_iface.sink_input_cache {
 		update := si_details_to_update(sinkinfo)
+		//		update.Name = "this is a super long name to test auto sizing"
 		b, err := json.Marshal(update)
 		if err != nil {
 			continue
 		}
 		ar_json = append(ar_json, b)
 	}
-	
+
 	return
 }
 
