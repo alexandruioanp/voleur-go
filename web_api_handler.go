@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/alexandruioanp/volgotest/ifaces"
+	"github.com/alexandruioanp/voleur-go/ifaces"
 	"net/http"
 )
 

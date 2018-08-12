@@ -306,7 +306,7 @@ func get_base64_file(path string) (enc string) {
 }
 
 func get_icon_path(name string) (path string) {
-	cmd_out, err := exec.Command("./src/voleur/aux/get_icon_path_gtk.py", name).Output()
+	cmd_out, err := exec.Command("./aux/get_icon_path_gtk.py", name).Output()
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 	}
