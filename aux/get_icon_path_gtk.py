@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# https://askubuntu.com/questions/52430/how-can-i-find-the-location-of-an-icon-of-a-launcher-in-use
 import gi
 import sys
 gi.require_version('Gtk', '3.0')
